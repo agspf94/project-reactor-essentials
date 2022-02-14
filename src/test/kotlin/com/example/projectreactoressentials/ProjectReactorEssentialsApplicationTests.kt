@@ -2,6 +2,7 @@ package com.example.projectreactoressentials
 
 import java.io.File.separator
 import org.junit.jupiter.api.Test
+import org.reactivestreams.Subscription
 import org.springframework.boot.test.context.SpringBootTest
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
@@ -73,5 +74,50 @@ class ProjectReactorEssentialsApplicationTests {
 		StepVerifier.create(mono)
 			.expectError(RuntimeException::class.java)
 			.verify()
+	}
+
+	@Test
+	fun monoSubscriberConsumerComplete() {
+		val name = "Anderson Fantin"
+		val mono = Mono.just(name)
+			.map(String::uppercase)
+			.log()
+		mono.subscribe(
+			{
+				println("Value: $it")
+			},
+			(Throwable::printStackTrace),
+			{
+				println("Finished")
+			}
+		)
+		println(separator)
+
+		StepVerifier.create(mono)
+			.expectNext(name.uppercase())
+			.verifyComplete()
+	}
+
+	@Test
+	fun monoSubscriberConsumerSubscription() {
+		val name = "Anderson Fantin"
+		val mono = Mono.just(name)
+			.map(String::uppercase)
+			.log()
+		mono.subscribe(
+			{
+				println("Value: $it")
+			},
+			(Throwable::printStackTrace),
+			{
+				println("Finished")
+			},
+			(Subscription::cancel)
+		)
+		println(separator)
+
+		StepVerifier.create(mono)
+			.expectNext(name.uppercase())
+			.verifyComplete()
 	}
 }
