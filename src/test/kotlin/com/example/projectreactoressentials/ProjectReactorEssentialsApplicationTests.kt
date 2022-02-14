@@ -1,6 +1,5 @@
 package com.example.projectreactoressentials
 
-import java.io.File.separator
 import org.junit.jupiter.api.Test
 import org.reactivestreams.Subscription
 import org.springframework.boot.test.context.SpringBootTest
@@ -123,6 +122,51 @@ class ProjectReactorEssentialsApplicationTests {
 
 		StepVerifier.create(mono)
 			.expectNext(name)
+			.verifyComplete()
+	}
+
+	@Test
+	fun monoDoOnError() {
+		val mono: Mono<Any> = Mono.error<Any?>(RuntimeException("Runtime error"))
+			.doOnError { println("Error: $it") }
+			.log()
+		println(separator)
+
+		StepVerifier.create(mono)
+			.expectError(RuntimeException::class.java)
+			.verify()
+	}
+
+	@Test
+	fun monoOnErrorResume() {
+		val mono: Mono<Any> = Mono.error<Any?>(RuntimeException("Runtime error"))
+			.onErrorResume {
+				println("Continuing")
+				Mono.just("Not an error")
+			}
+			.doOnError { println("Error: $it") }
+			.log()
+		println(separator)
+
+		StepVerifier.create(mono)
+			.expectNext("Not an error")
+			.verifyComplete()
+	}
+
+	@Test
+	fun monoOnErrorReturn() {
+		val mono: Mono<Any> = Mono.error<Any?>(RuntimeException("Runtime error"))
+			.onErrorResume {
+				println("Continuing")
+				Mono.error(RuntimeException("Runtime error"))
+			}
+			.onErrorReturn("onErrorReturn")
+			.doOnError { println("Error: $it") }
+			.log()
+		println(separator)
+
+		StepVerifier.create(mono)
+			.expectNext("onErrorReturn")
 			.verifyComplete()
 	}
 }
