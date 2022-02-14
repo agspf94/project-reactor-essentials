@@ -28,7 +28,7 @@ class ProjectReactorEssentialsApplicationTests {
 	@Test
 	fun monoSubscriber() {
 		val name = "Anderson Fantin"
-		val mono: Mono<String> = Mono.just(name)
+		val mono = Mono.just(name)
 			.log()
 		mono.subscribe()
 		println(separator)
@@ -36,5 +36,42 @@ class ProjectReactorEssentialsApplicationTests {
 		StepVerifier.create(mono)
 			.expectNext(name)
 			.verifyComplete()
+	}
+
+	@Test
+	fun monoSubscriberConsumer() {
+		val name = "Anderson Fantin"
+		val mono = Mono.just(name)
+			.log()
+		mono.subscribe {
+			println("Value: $it")
+		}
+		println(separator)
+
+		StepVerifier.create(mono)
+			.expectNext(name)
+			.verifyComplete()
+	}
+
+	@Test
+	fun monoSubscriberConsumerError() {
+		val name = "Anderson Fantin"
+		val mono = Mono.just(name)
+			.map {
+				throw RuntimeException("Testing mono with error")
+			}
+		mono.subscribe(
+			{
+				println("Value: $it")
+			},
+			{
+				println("Something bad happened")
+			}
+		)
+		println(separator)
+
+		StepVerifier.create(mono)
+			.expectError(RuntimeException::class.java)
+			.verify()
 	}
 }
