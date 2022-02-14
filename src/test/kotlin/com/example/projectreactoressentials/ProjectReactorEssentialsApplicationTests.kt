@@ -44,9 +44,7 @@ class ProjectReactorEssentialsApplicationTests {
 		val name = "Anderson Fantin"
 		val mono = Mono.just(name)
 			.log()
-		mono.subscribe {
-			println("Value: $it")
-		}
+		mono.subscribe { println("Value: $it") }
 		println(separator)
 
 		StepVerifier.create(mono)
@@ -58,16 +56,10 @@ class ProjectReactorEssentialsApplicationTests {
 	fun monoSubscriberConsumerError() {
 		val name = "Anderson Fantin"
 		val mono = Mono.just(name)
-			.map {
-				throw RuntimeException("Testing mono with error")
-			}
+			.map { throw RuntimeException("Testing mono with error") }
 		mono.subscribe(
-			{
-				println("Value: $it")
-			},
-			{
-				println("Something bad happened")
-			}
+			{ println("Value: $it") },
+			{ println("Something bad happened") }
 		)
 		println(separator)
 
@@ -83,13 +75,9 @@ class ProjectReactorEssentialsApplicationTests {
 			.map(String::uppercase)
 			.log()
 		mono.subscribe(
-			{
-				println("Value: $it")
-			},
+			{ println("Value: $it") },
 			(Throwable::printStackTrace),
-			{
-				println("Finished")
-			}
+			{ println("Finished") }
 		)
 		println(separator)
 
@@ -105,19 +93,36 @@ class ProjectReactorEssentialsApplicationTests {
 			.map(String::uppercase)
 			.log()
 		mono.subscribe(
-			{
-				println("Value: $it")
-			},
+			{ println("Value: $it") },
 			(Throwable::printStackTrace),
-			{
-				println("Finished")
-			},
+			{ println("Finished") },
 			(Subscription::cancel)
 		)
 		println(separator)
 
 		StepVerifier.create(mono)
 			.expectNext(name.uppercase())
+			.verifyComplete()
+	}
+
+	@Test
+	fun monoDoOnMethods() {
+		val name = "Anderson Fantin"
+		val mono = Mono.just(name)
+			.doOnSubscribe { println("doOnSubscribe: $it") }
+			.doOnRequest { println("doOnRequest: $it") }
+			.doOnNext { println("doOnNext: $it") }
+			.doOnSuccess { println("doOnSuccess: $it") }
+			.log()
+		mono.subscribe(
+			{ println("Value: $it") },
+			(Throwable::printStackTrace),
+			{ println("Finished") }
+		)
+		println(separator)
+
+		StepVerifier.create(mono)
+			.expectNext(name)
 			.verifyComplete()
 	}
 }
