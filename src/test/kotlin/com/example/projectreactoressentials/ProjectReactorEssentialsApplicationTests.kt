@@ -1,7 +1,10 @@
 package com.example.projectreactoressentials
 
+import java.io.File.separator
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
+import reactor.core.publisher.Mono
+import reactor.test.StepVerifier
 
 @SpringBootTest
 class ProjectReactorEssentialsApplicationTests {
@@ -20,9 +23,18 @@ class ProjectReactorEssentialsApplicationTests {
 		2. Publisher sent all the objects it has. (onComplete) subscriber and subscription will be cancelled
 		3. There is an error. (onError) subscriber and subscription will be cancelled
 	 */
+	val separator = "---------------------------------------------"
 
 	@Test
-	fun test() {
-		println("Everything working as intended")
+	fun monoSubscriber() {
+		val name = "Anderson Fantin"
+		val mono: Mono<String> = Mono.just(name)
+			.log()
+		mono.subscribe()
+		println(separator)
+
+		StepVerifier.create(mono)
+			.expectNext(name)
+			.verifyComplete()
 	}
 }
