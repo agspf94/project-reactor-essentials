@@ -5,9 +5,8 @@ import org.springframework.boot.test.context.SpringBootTest
 
 @SpringBootTest
 class ProjectReactorEssentialsApplicationTests {
-
 	@Test
-	fun contextLoads() {
+	fun test() {
+		println("Everything working as intended")
 	}
-
 }
