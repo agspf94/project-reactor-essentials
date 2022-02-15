@@ -1,6 +1,7 @@
 package com.example.projectreactoressentials
 
 import org.junit.jupiter.api.Test
+import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import org.springframework.boot.test.context.SpringBootTest
 import reactor.core.publisher.Flux
@@ -215,6 +216,78 @@ class ProjectReactorEssentialsApplicationTests {
 
 		StepVerifier.create(flux)
 			.expectNext(1, 2, 3, 4, 5)
+			.verifyComplete()
+	}
+
+	@Test
+	fun fluxSubscriberFromList() {
+		val flux = Flux.fromIterable(listOf(1, 2, 3, 4))
+			.log()
+		flux.subscribe { println("Number: $it") }
+		println(separator)
+
+		StepVerifier.create(flux)
+			.expectNext(1, 2, 3, 4)
+			.verifyComplete()
+	}
+
+	@Test
+	fun fluxSubscriberNumbersError() {
+		val flux = Flux.range(1, 5)
+			.log()
+			.map {
+				if (it == 4) throw IndexOutOfBoundsException("Index error")
+				it
+			}
+		flux.subscribe(
+			{ println("Number: $it") },
+			Throwable::printStackTrace,
+			{ println("Done") },
+			{ it.request(3) }
+		)
+		println(separator)
+
+		StepVerifier.create(flux)
+			.expectNext(1, 2, 3)
+			.expectError(IndexOutOfBoundsException::class.java)
+			.verify()
+	}
+
+	@Test
+	fun fluxSubscriberNumbersUglyBackpressure() {
+		val flux = Flux.range(1, 10)
+			.log()
+		flux.subscribe(object : Subscriber<Int?> {
+			private var count = 0
+			private var subscription: Subscription? = null
+			private val requestCount = 2L
+
+			override fun onSubscribe(s: Subscription?) {
+				this.subscription = s
+				subscription!!.request(requestCount)
+			}
+
+			override fun onNext(t: Int?) {
+				count++
+				if (count >= 2) {
+					count = 0
+					subscription?.request(requestCount)
+				}
+			}
+
+			override fun onError(t: Throwable?) {
+				TODO("Not yet implemented")
+			}
+
+			override fun onComplete() {
+				subscription?.cancel()
+			}
+
+		})
+		println(separator)
+
+		StepVerifier.create(flux)
+			.expectNext(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 			.verifyComplete()
 	}
 }
