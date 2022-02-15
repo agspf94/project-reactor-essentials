@@ -169,4 +169,27 @@ class ProjectReactorEssentialsApplicationTests {
 			.expectNext("onErrorReturn")
 			.verifyComplete()
 	}
+
+	@Test
+	fun monoTests() {
+		Mono.just("Anderson Fantin")
+			.map { it.uppercase() }
+			.doOnSubscribe { println("doOnSubscribe: $it") }
+			.doOnRequest { println("doOnRequest: $it") }
+			.doOnNext { println("doOnNext: $it") }
+			.doOnSuccess { println("doOnSuccess: $it") }
+			.doOnError { println("doOnError: $it") }
+			.onErrorResume {
+				println("onErrorResume: $it")
+				Mono.just("Giuseppe Saraiva Patriarca")
+			}
+			.onErrorReturn("Giuseppe Saraiva Patriarca")
+			.log()
+			.subscribe(
+				{ println("Value: $it") },
+				(Throwable::printStackTrace),
+				{ println("Finished") },
+				{ it.request(5) }
+			)
+	}
 }
