@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import org.springframework.boot.test.context.SpringBootTest
+import reactor.core.publisher.BaseSubscriber
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
@@ -282,7 +283,33 @@ class ProjectReactorEssentialsApplicationTests {
 			override fun onComplete() {
 				subscription?.cancel()
 			}
+		})
+		println(separator)
 
+		StepVerifier.create(flux)
+			.expectNext(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+			.verifyComplete()
+	}
+
+	@Test
+	fun fluxSubscriberNumbersNotSoUglyBackpressure() {
+		val flux = Flux.range(1, 10)
+			.log()
+		flux.subscribe(object : BaseSubscriber<Int>() {
+			private var count = 0
+			private val requestCount = 2L
+
+			override fun hookOnSubscribe(subscription: Subscription) {
+				request(2)
+			}
+
+			override fun hookOnNext(value: Int) {
+				count++
+				if (count >= 2) {
+					count = 0
+					request(requestCount)
+				}
+			}
 		})
 		println(separator)
 
