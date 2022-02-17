@@ -346,4 +346,17 @@ class ProjectReactorEssentialsApplicationTests {
 		return Flux.interval(Duration.ofDays(1))
 			.log()
 	}
+
+	@Test
+	fun fluxSubscriberPrettyBackpressure() {
+		val flux = Flux.range(1, 10)
+			.log()
+			.limitRate(3)
+		flux.subscribe { println("Number: $it") }
+		println(separator)
+
+		StepVerifier.create(flux)
+			.expectNext(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+			.verifyComplete()
+	}
 }
