@@ -1,5 +1,6 @@
 package com.example.projectreactoressentials
 
+import java.time.Duration
 import org.junit.jupiter.api.Test
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
@@ -316,5 +317,33 @@ class ProjectReactorEssentialsApplicationTests {
 		StepVerifier.create(flux)
 			.expectNext(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 			.verifyComplete()
+	}
+
+	@Test
+	fun fluxSubscriberInterval1() {
+		val interval = Flux.interval(Duration.ofMillis(100))
+			.take(10)
+			.log()
+		interval.subscribe { println("Number: $it") }
+
+		Thread.sleep(3000)
+	}
+
+	@Test
+	fun fluxSubscriberInterval2() {
+		StepVerifier.withVirtualTime(this::createInterval)
+			.expectSubscription()
+			.expectNoEvent(Duration.ofDays(1))
+			.thenAwait(Duration.ofDays(1))
+			.expectNext(0L)
+			.thenAwait(Duration.ofDays(1))
+			.expectNext(1L)
+			.thenCancel()
+			.verify()
+	}
+
+	private fun createInterval(): Flux<Long> {
+		return Flux.interval(Duration.ofDays(1))
+			.log()
 	}
 }
