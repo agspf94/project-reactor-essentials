@@ -6,6 +6,7 @@ import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import org.springframework.boot.test.context.SpringBootTest
 import reactor.core.publisher.BaseSubscriber
+import reactor.core.publisher.ConnectableFlux
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
@@ -358,5 +359,20 @@ class ProjectReactorEssentialsApplicationTests {
 		StepVerifier.create(flux)
 			.expectNext(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 			.verifyComplete()
+	}
+
+	@Test
+	fun connectableFlux() {
+		val connectableFlux: ConnectableFlux<Int> = Flux.range(1, 10)
+			.log()
+			.delayElements(Duration.ofMillis(100))
+			.publish()
+
+		StepVerifier.create(connectableFlux)
+			.then(connectableFlux::connect)
+			.thenConsumeWhile { it <= 5 }
+			.expectNext(6, 7, 8, 9, 10)
+			.expectComplete()
+			.verify()
 	}
 }
